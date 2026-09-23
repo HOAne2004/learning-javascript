@@ -8,7 +8,7 @@ let age = 20;
 age = 30
 console.log(age)
 
-// Không thể gán giá trị cho hằng số
+// Không thể gán lại giá trị cho hằng số (const)
 //const myAge = 30
 //myAge = 35 // báo lỗi
 //console.log(myAge)
