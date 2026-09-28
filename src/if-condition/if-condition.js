@@ -27,3 +27,8 @@ switch (true) {
     default:
         console.log("Yeu");
 }
+
+// 3. Ternary operator
+// condition ? experssion1(if condition is true) : expression2(if condition is false)
+
+console.log((age > 18) ? "Người lớn" : "Trẻ em");
