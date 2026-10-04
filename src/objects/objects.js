@@ -25,7 +25,17 @@ const student2 = {
     }
 };
 
-const students = [student1, student2];
+const student3 = {
+    name: "HOAn",
+    address: "Nam Dinh",
+    age: 24,
+    scores: {
+        math: 9,
+        english: 9
+    }
+};
+
+const students = [student1, student2, student3];
 
 console.log(">>> Students: ", students);
 
@@ -36,8 +46,25 @@ console.log("Tên của sinh viên 1:", student1.name);
 
 // Set data
 student1.university = "HAUI";
-console.log(">>> Student 1 after add university: ", student1)
+console.log(">>> Student 1 after add university: ", student1);
 
 // Delete data
-delete student1.university
-console.log(">>> Student 1 after delete university: ", student1)
+delete student1.university;
+console.log(">>> Student 1 after delete university: ", student1);
+
+console.log("3. Lặp Object với for ... in  và for ... of");
+// Cach 1:
+students.forEach((element, index) =>{
+    console.log(">>> index = ", index, "Name: ", element.name);
+})
+
+// Cach 2: recommend
+for(let key in student1){
+    console.log(key, student1[key]);
+}
+
+
+// cach 3: trả ra dạng array - [name, "HOAn"]
+for(let value of Object.entries(student2)){
+    console.log(value);
+}
