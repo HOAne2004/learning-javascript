@@ -109,8 +109,11 @@ btnSubmit.addEventListener("click", () => {
     // Kiểm tra điều kiện "đăng nhập"
     if (phone === "0123456789" && password === "12345") {
         setStatus("Success", "success");
+        alert("Đăng nhập thành công!");
+        window.location.href = "success.html"
     } else {
         setStatus("Fail", "fail");
+        alert("Sai tài khoản hoặc mật khẩu.");
     }
 
     // Cập nhật UI ngay, không cần F5
