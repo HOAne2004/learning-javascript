@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Storage - Luyện tập</title>
+    <style>
+        /* ===== Reset & layout ===== */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+            font-family: "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #141e30, #243b55);
+            color: #eaeaea;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 720px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 18px;
+            padding: 32px 36px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            font-size: 26px;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            display: block;
+            font-size: 14px;
+            color: #a0aec0;
+            margin-bottom: 22px;
+        }
+
+        /* ===== Khối lý thuyết ===== */
+        .theory {
+            background: rgba(0, 114, 255, 0.08);
+            border-left: 4px solid #0072ff;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 22px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .theory h3 {
+            margin-bottom: 10px;
+            color: #63b3ed;
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .theory ul { padding-left: 20px; }
+        .theory li { margin-bottom: 5px; }
+        .theory code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: Consolas, monospace;
+            color: #ffd580;
+            font-size: 13px;
+        }
+        .theory .note { color: #ffd580; font-style: italic; margin-top: 8px; }
+
+        /* ===== Form ===== */
+        .form-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 14px;
+            gap: 12px;
+        }
+
+        label {
+            min-width: 90px;
+            font-weight: 600;
+            color: #cbd5e0;
+        }
+
+        input {
+            flex: 1;
+            padding: 10px 14px;
+            font-size: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(0, 0, 0, 0.25);
+            color: #fff;
+            outline: none;
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+        input:focus {
+            border-color: #0072ff;
+            box-shadow: 0 0 0 3px rgba(0, 114, 255, 0.25);
+        }
+
+        /* ===== Buttons ===== */
+        button {
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #fff;
+            background: linear-gradient(135deg, #0072ff, #00c6ff);
+            transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+        }
+        button:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 6px 16px rgba(0, 114, 255, 0.4); }
+        button:active { transform: translateY(0); }
+
+        button.danger  { background: linear-gradient(135deg, #e53e3e, #fc8181); }
+        button.warning { background: linear-gradient(135deg, #dd6b20, #f6ad55); }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px dashed rgba(255, 255, 255, 0.15);
+            margin: 22px 0;
+        }
+
+        /* ===== Status ===== */
+        #status {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        #status.success { color: #68d391; background: rgba(104, 211, 145, 0.12); }
+        #status.fail    { color: #fc8181; background: rgba(252, 129, 129, 0.12); }
+
+        /* ===== History ===== */
+        .history {
+            margin-top: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.25);
+            font-size: 14px;
+            border-left: 3px solid #00c6ff;
+            word-break: break-all;
+        }
+        .history strong { color: #63b3ed; }
+        .history .empty { color: #718096; font-style: italic; }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            margin: 3px 4px 3px 0;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #0072ff, #00c6ff);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Local Storage</h1>
+        <span class="subtitle">Lưu trữ dữ liệu phía client — tồn tại vĩnh viễn cho đến khi bị xóa</span>
+
+        <!-- ===== LÝ THUYẾT ===== -->
+        <div class="theory">
+            <h3>📚 Các phương thức chính</h3>
+            <ul>
+                <li><code>setItem(key, value)</code> — Lưu dữ liệu (value dạng <b>string</b>)</li>
+                <li><code>getItem(key)</code> — Lấy dữ liệu theo key (trả về <code>null</code> nếu không có)</li>
+                <li><code>removeItem(key)</code> — Xóa dữ liệu theo key</li>
+                <li><code>clear()</code> — Xóa toàn bộ dữ liệu trong Local Storage</li>
+            </ul>
+
+            <h3 style="margin-top:14px;">🧠 Lý thuyết mở rộng</h3>
+            <ul>
+                <li><b>Chỉ lưu string</b>: số, boolean, object, array đều phải convert.</li>
+                <li>Object/Array → dùng <code>JSON.stringify(obj)</code> khi lưu.</li>
+                <li>String → Object → dùng <code>JSON.parse(str)</code> khi đọc.</li>
+                <li><b>Phạm vi</b>: theo <i>origin</i> (protocol + domain + port).</li>
+                <li><b>Vĩnh viễn</b>: khác <code>sessionStorage</code> (mất khi đóng tab).</li>
+                <li><b>Dung lượng</b>: ~5MB / domain (tùy trình duyệt).</li>
+                <li><b>Đồng bộ</b> (synchronous) → không nên lưu data quá lớn.</li>
+                <li>❌ Không lưu được: <code>function</code>, <code>undefined</code>, <code>Symbol</code>.</li>
+                <li>🔒 Không nên lưu password/token nhạy cảm!</li>
+            </ul>
+            <p class="note">💡 So sánh nhanh: localStorage (vĩnh viễn) | sessionStorage (theo tab) | cookie (gửi kèm request, ≤4KB)</p>
+        </div>
+
+        <!-- ===== FORM ===== -->
+        <div class="form-group">
+            <label for="ipPhone">Phone</label>
+            <input id="ipPhone" type="text" placeholder="Nhập số điện thoại..." />
+        </div>
+        <div class="form-group">
+            <label for="ipPassword">Password</label>
+            <input id="ipPassword" type="password" placeholder="Nhập mật khẩu..." />
+        </div>
+
+        <hr>
+
+        <button id="btnSubmit">Submit</button>
+        <span id="status" style="margin-left:12px;">Status: —</span>
+
+        <hr>
+
+        <div class="history">
+            📱 Phone history:
+            <span id="phoneHistory"><span class="empty">(trống)</span></span>
+        </div>
+        <div class="history" style="border-left-color:#a18cd1;">
+            🔑 Password history:
+            <span id="passwordHistory"><span class="empty">(trống)</span></span>
+        </div>
+
+        <div class="btn-row">
+            <button id="removePhoneHistory" class="warning">Remove Phone history</button>
+            <button id="removePasswordHistory" class="warning">Remove Password history</button>
+            <button id="clearHistory" class="danger">Clear all</button>
+        </div>
+    </div>
+
+    <script src="local-storage.js"></script>
+</body>
+</html>
