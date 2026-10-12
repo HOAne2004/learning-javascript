@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asynchronous - Hiểu rõ bất đồng bộ</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #eaeaea;
+            min-height: 100vh;
+            padding: 40px 20px;
+            line-height: 1.65;
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 30px;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #00c6ff, #fbc2eb, #a18cd1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #a0aec0;
+            margin-bottom: 28px;
+            font-size: 15px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 22px 26px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h2 {
+            font-size: 19px;
+            margin-bottom: 14px;
+            color: #63b3ed;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card h3 {
+            font-size: 15px;
+            margin: 14px 0 8px;
+            color: #f6ad55;
+        }
+
+        .card p { margin-bottom: 10px; color: #cbd5e0; font-size: 14.5px; }
+
+        .card ul, .card ol { padding-left: 22px; margin-bottom: 10px; }
+        .card li { margin-bottom: 6px; font-size: 14.5px; color: #cbd5e0; }
+
+        code {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 7px;
+            border-radius: 5px;
+            font-family: Consolas, "Courier New", monospace;
+            color: #ffd580;
+            font-size: 13.5px;
+        }
+
+        pre {
+            background: #0d1117;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 16px 18px;
+            overflow-x: auto;
+            margin: 12px 0;
+            font-size: 13.5px;
+            line-height: 1.6;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: #e6edf3;
+        }
+
+        .kw { color: #ff7b72; }    /* keyword */
+        .fn { color: #d2a8ff; }    /* function */
+        .str { color: #a5d6ff; }   /* string */
+        .num { color: #79c0ff; }   /* number */
+        .cmt { color: #8b949e; font-style: italic; } /* comment */
+        .var { color: #ffa657; }   /* variable */
+
+        .highlight {
+            background: linear-gradient(90deg, rgba(0, 198, 255, 0.15), rgba(161, 140, 209, 0.15));
+            border-left: 4px solid #00c6ff;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-size: 14.5px;
+        }
+
+        .warning {
+            border-left-color: #f6ad55;
+            background: linear-gradient(90deg, rgba(246, 173, 85, 0.12), transparent);
+        }
+
+        .success {
+            border-left-color: #68d391;
+            background: linear-gradient(90deg, rgba(104, 211, 145, 0.12), transparent);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        th {
+            background: rgba(0, 114, 255, 0.12);
+            color: #63b3ed;
+            font-weight: 600;
+        }
+
+        td { color: #cbd5e0; }
+
+        .diagram {
+            background: #0d1117;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 18px;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #79c0ff;
+            overflow-x: auto;
+            white-space: pre;
+            margin: 12px 0;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-right: 6px;
+        }
+        .badge.sync  { background: #e53e3e; color: #fff; }
+        .badge.async { background: #38a169; color: #fff; }
+        .badge.pending   { background: #dd6b20; color: #fff; }
+        .badge.fulfilled { background: #38a169; color: #fff; }
+        .badge.rejected  { background: #e53e3e; color: #fff; }
+
+        .demo-output {
+            background: #000;
+            color: #4ade80;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-family: Consolas, monospace;
+            font-size: 13.5px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            border: 1px solid rgba(74, 222, 128, 0.2);
+        }
+
+        hr {
+            border: none;
+            border-top: 1px dashed rgba(255, 255, 255, 0.15);
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Asynchronous JavaScript</h1>
+        <p class="subtitle">Hiểu rõ bất đồng bộ — từ Call Stack đến Event Loop</p>
+
+        <!-- 1. ĐỊNH NGHĨA -->
+        <div class="card">
+            <h2>1. Bất đồng bộ là gì?</h2>
+            <p><b>Đồng bộ (Synchronous):</b> các lệnh chạy <b>tuần tự</b>, lệnh sau phải đợi lệnh trước xong.</p>
+            <p><b>Bất đồng bộ (Asynchronous):</b> một tác vụ tốn thời gian được <b>đẩy ra chạy ngầm</b>, JS tiếp tục chạy code tiếp theo, khi tác vụ xong thì quay lại xử lý kết quả.</p>
+
+            <div class="highlight">
+                🍜 <b>Ví dụ đời thường:</b> Đun nước pha mì. Đồng bộ = đứng nhìn nồi nước sôi 5 phút. Bất đồng bộ = bật bếp rồi đi làm việc khác, khi nước sôi bếp "kêu" thì quay lại.
+            </div>
+        </div>
+
+        <!-- 2. TẠI SAO CẦN -->
+        <div class="card">
+            <h2>2. Tại sao JS cần bất đồng bộ?</h2>
+            <p>JavaScript là <b>single-threaded</b> — chỉ có 1 luồng chạy code. Nếu mọi thứ đều đồng bộ:</p>
+            <pre><code><span class="kw">const</span> <span class="var">data</span> = <span class="fn">fetch</span>(<span class="str">"https://api.example.com"</span>); <span class="cmt">// mất 3 giây</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">data</span>); <span class="cmt">// ← trang web ĐƠ 3 giây ở đây!</span></code></pre>
+            <p>→ User không click, không scroll, không gõ được gì trong 3 giây đó. 😱</p>
+            <p>→ Vì vậy các tác vụ tốn thời gian (gọi API, đọc file, timer) phải chạy <b>bất đồng bộ</b>.</p>
+        </div>
+
+        <!-- 3. EVENT LOOP -->
+        <div class="card">
+            <h2>3. Cơ chế hoạt động — Event Loop</h2>
+            <p>Đây là "trái tim" của async JS. Gồm 4 thành phần:</p>
+
+            <div class="diagram">┌─────────────────────┐
+│    Call Stack       │  ← JS chạy code đồng bộ, từng dòng
+└──────────┬──────────┘
+           │ gặp tác vụ async
+           ▼
+┌─────────────────────┐
+│    Web APIs         │  ← Trình duyệt đảm nhiệm (timer, fetch...)
+└──────────┬──────────┘     JS KHÔNG đứng đợi ở đây
+           │ xong → đẩy callback
+           ▼
+┌─────────────────────┐
+│  Callback Queue     │  ← Hàng đợi callback chờ chạy
+└──────────┬──────────┘
+           │
+           ▼
+┌─────────────────────┐
+│    Event Loop       │  ← Khi Stack TRỐNG → lấy callback từ Queue
+└─────────────────────┘     đẩy vào Stack để chạy</div>
+
+            <div class="highlight success">
+                ✅ <b>Quy tắc vàng:</b> Callback trong Queue chỉ được chạy khi <b>Call Stack đã trống hoàn toàn</b> (code đồng bộ chạy hết).
+            </div>
+        </div>
+
+        <!-- 4. VÍ DỤ -->
+        <div class="card">
+            <h2>4. Ví dụ thấy rõ bất đồng bộ</h2>
+
+            <h3>a) setTimeout cơ bản</h3>
+            <pre><code><span class="fn">console</span>.<span class="fn">log</span>(<span class="num">1</span>);
+<span class="fn">setTimeout</span>(() => { <span class="fn">console</span>.<span class="fn">log</span>(<span class="num">2</span>) }, <span class="num">1000</span>);
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="num">3</span>);</code></pre>
+            <div class="demo-output">1
+3          ← chạy ngay
+2          ← sau 1 giây mới in</div>
+            <p>Dù <code>console.log(2)</code> viết trước <code>console.log(3)</code>, nhưng nó bị <b>đẩy ra sau</b> vì nằm trong setTimeout.</p>
+
+            <h3>b) Bằng chứng rõ nhất: setTimeout 0ms</h3>
+            <pre><code><span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"Start"</span>);
+<span class="fn">setTimeout</span>(() => <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"A - 0ms"</span>), <span class="num">0</span>);
+<span class="fn">setTimeout</span>(() => <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"B - 1000ms"</span>), <span class="num">1000</span>);
+<span class="fn">setTimeout</span>(() => <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"C - 500ms"</span>), <span class="num">500</span>);
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"End"</span>);</code></pre>
+            <div class="demo-output">Start
+End        ← code sync chạy hết trước
+A - 0ms    ← dù 0ms, vẫn phải đợi Stack trống
+C - 500ms
+B - 1000ms</div>
+            <div class="highlight warning">
+                ⚠️ <b>Hiểu lầm phổ biến:</b> <code>setTimeout(fn, 0)</code> KHÔNG có nghĩa là "chạy ngay". Nó chỉ có nghĩa là "đẩy vào Queue, khi Stack trống thì chạy".
+            </div>
+        </div>
+
+        <!-- 5. PROMISE -->
+        <div class="card">
+            <h2>5. Promise — 3 trạng thái</h2>
+            <table>
+                <tr>
+                    <th>Trạng thái</th>
+                    <th>Ý nghĩa</th>
+                </tr>
+                <tr>
+                    <td><span class="badge pending">pending</span></td>
+                    <td>Đang chờ — chưa có kết quả</td>
+                </tr>
+                <tr>
+                    <td><span class="badge fulfilled">fulfilled</span></td>
+                    <td>Thành công — đã gọi <code>resolve(value)</code></td>
+                </tr>
+                <tr>
+                    <td><span class="badge rejected">rejected</span></td>
+                    <td>Thất bại — đã gọi <code>reject(error)</code></td>
+                </tr>
+            </table>
+
+            <pre><code><span class="kw">const</span> <span class="var">p</span> = <span class="kw">new</span> <span class="fn">Promise</span>((<span class="var">resolve</span>, <span class="var">reject</span>) => {
+    <span class="cmt">// Phần executor này chạy ĐỒNG BỘ ngay lập tức</span>
+    <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"1. Executor chạy"</span>);
+    <span class="fn">setTimeout</span>(() => {
+        <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"3. Trong setTimeout"</span>);
+        <span class="fn">resolve</span>(<span class="str">"OK"</span>); <span class="cmt">// chuyển sang fulfilled</span>
+    }, <span class="num">2000</span>);
+    <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"2. Executor kết thúc"</span>);
+});
+
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">p</span>); <span class="cmt">// Promise {&lt;pending&gt;}</span>
+
+<span class="var">p</span>.<span class="fn">then</span>(<span class="var">result</span> => {
+    <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"4. .then chạy:"</span>, <span class="var">result</span>);
+});</code></pre>
+            <div class="demo-output">1. Executor chạy
+2. Executor kết thúc
+Promise {&lt;pending&gt;}
+   ← đợi 2 giây
+3. Trong setTimeout
+4. .then chạy: OK</div>
+            <div class="highlight">
+                💡 <b>Nhớ kỹ:</b> Executor của Promise chạy <b>đồng bộ ngay</b>. Chỉ có <code>.then()</code> mới chạy <b>bất đồng bộ</b> (sau khi resolve).
+            </div>
+        </div>
+
+        <!-- 6. TỔNG KẾT -->
+        <div class="card">
+            <h2>6. Tổng kết cần nhớ</h2>
+            <ul>
+                <li>JS <b>single-threaded</b> → cần async để không block UI.</li>
+                <li>Async = "đẩy việc tốn thời gian ra chạy ngầm, làm tiếp việc khác".</li>
+                <li><b>Event Loop</b> điều phối: chỉ chạy callback khi Call Stack trống.</li>
+                <li><code>setTimeout(fn, 0)</code> ≠ chạy ngay, mà = "chạy sau khi sync xong".</li>
+                <li>Promise có 3 trạng thái: <b>pending → fulfilled / rejected</b>.</li>
+                <li>Executor của Promise chạy <b>sync</b>; <code>.then()</code> chạy <b>async</b>.</li>
+                <li>Các nguồn async phổ biến: <code>setTimeout</code>, <code>fetch</code>, <code>addEventListener</code>, <code>Promise</code>, <code>async/await</code>.</li>
+            </ul>
+
+            <div class="highlight success">
+                🎯 <b>Bài tập tự luyện:</b> Đoán output trước khi chạy, sau đó chạy để kiểm tra:
+                <pre style="margin-top:10px;"><code><span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"1"</span>);
+<span class="fn">setTimeout</span>(() => <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"2"</span>), <span class="num">0</span>);
+<span class="fn">Promise</span>.<span class="fn">resolve</span>().<span class="fn">then</span>(() => <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"3"</span>));
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"4"</span>);</code></pre>
+                <p style="margin-top:8px; color:#68d391;">→ Đáp án: <b>1, 4, 3, 2</b> (microtask của Promise chạy trước macrotask của setTimeout).</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="asynchronous.js"></script>
+</body>
+</html>

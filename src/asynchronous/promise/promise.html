@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promise - Hiểu rõ 3 trạng thái</title>
+    <style>
+        /* ===== Reset & layout ===== */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #eaeaea;
+            min-height: 100vh;
+            padding: 40px 20px;
+            line-height: 1.65;
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 30px;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #a18cd1, #fbc2eb, #00c6ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #a0aec0;
+            margin-bottom: 28px;
+            font-size: 15px;
+        }
+
+        /* ===== Card ===== */
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 22px 26px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h2 {
+            font-size: 19px;
+            margin-bottom: 14px;
+            color: #63b3ed;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card h3 {
+            font-size: 15px;
+            margin: 14px 0 8px;
+            color: #f6ad55;
+        }
+
+        .card p { margin-bottom: 10px; color: #cbd5e0; font-size: 14.5px; }
+
+        .card ul { padding-left: 22px; margin-bottom: 10px; }
+        .card li { margin-bottom: 6px; font-size: 14.5px; color: #cbd5e0; }
+
+        /* ===== Code ===== */
+        code {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 7px;
+            border-radius: 5px;
+            font-family: Consolas, "Courier New", monospace;
+            color: #ffd580;
+            font-size: 13.5px;
+        }
+
+        pre {
+            background: #0d1117;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 16px 18px;
+            overflow-x: auto;
+            margin: 12px 0;
+            font-size: 13.5px;
+            line-height: 1.6;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: #e6edf3;
+        }
+
+        .kw { color: #ff7b72; }
+        .fn { color: #d2a8ff; }
+        .str { color: #a5d6ff; }
+        .num { color: #79c0ff; }
+        .cmt { color: #8b949e; font-style: italic; }
+        .var { color: #ffa657; }
+
+        /* ===== Highlight boxes ===== */
+        .highlight {
+            background: linear-gradient(90deg, rgba(0, 198, 255, 0.15), rgba(161, 140, 209, 0.15));
+            border-left: 4px solid #00c6ff;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 12px 0;
+            font-size: 14.5px;
+        }
+
+        .highlight.warning {
+            border-left-color: #f6ad55;
+            background: linear-gradient(90deg, rgba(246, 173, 85, 0.12), transparent);
+        }
+
+        .highlight.success {
+            border-left-color: #68d391;
+            background: linear-gradient(90deg, rgba(104, 211, 145, 0.12), transparent);
+        }
+
+        /* ===== Table ===== */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        th {
+            background: rgba(0, 114, 255, 0.12);
+            color: #63b3ed;
+            font-weight: 600;
+        }
+
+        td { color: #cbd5e0; }
+
+        /* ===== Badge trạng thái ===== */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-right: 6px;
+        }
+        .badge.pending   { background: #dd6b20; color: #fff; }
+        .badge.fulfilled { background: #38a169; color: #fff; }
+        .badge.rejected  { background: #e53e3e; color: #fff; }
+
+        /* ===== Demo output ===== */
+        .demo-output {
+            background: #000;
+            color: #4ade80;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-family: Consolas, monospace;
+            font-size: 13.5px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            border: 1px solid rgba(74, 222, 128, 0.2);
+        }
+
+        /* ===== Nút chạy demo ===== */
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 16px 0;
+        }
+
+        button {
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #fff;
+            background: linear-gradient(135deg, #a18cd1, #fbc2eb);
+            transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+        }
+        button:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 6px 16px rgba(161, 140, 209, 0.4); }
+        button:active { transform: translateY(0); }
+
+        button.green { background: linear-gradient(135deg, #38a169, #68d391); }
+        button.red   { background: linear-gradient(135deg, #e53e3e, #fc8181); }
+        button.blue  { background: linear-gradient(135deg, #0072ff, #00c6ff); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔮 Promise trong JavaScript</h1>
+        <p class="subtitle">Hiểu rõ 3 trạng thái &amp; cơ chế bất đồng bộ của Promise</p>
+
+        <!-- ========== 1. ĐỊNH NGHĨA ========== -->
+        <div class="card">
+            <h2>1. Promise là gì?</h2>
+            <p><b>Promise</b> là một object đại diện cho kết quả của một tác vụ <b>bất đồng bộ</b> — kết quả có thể <b>chưa có ngay</b> mà sẽ có trong tương lai.</p>
+            <p>Hãy tưởng tượng Promise như một <b>phiếu hẹn</b>: bạn đặt hàng online, shop đưa phiếu hẹn (Promise). Phiếu đó có thể ở 3 trạng thái:</p>
+            <ul>
+                <li>⏳ <b>Đang xử lý</b> → pending</li>
+                <li>✅ <b>Giao thành công</b> → fulfilled</li>
+                <li>❌ <b>Giao thất bại / hủy đơn</b> → rejected</li>
+            </ul>
+        </div>
+
+        <!-- ========== 2. 3 TRẠNG THÁI ========== -->
+        <div class="card">
+            <h2>2. Ba trạng thái của Promise</h2>
+            <table>
+                <tr>
+                    <th>Trạng thái</th>
+                    <th>Ý nghĩa</th>
+                    <th>Cách chuyển</th>
+                </tr>
+                <tr>
+                    <td><span class="badge pending">pending</span></td>
+                    <td>Đang chờ — chưa có kết quả</td>
+                    <td>Trạng thái ban đầu</td>
+                </tr>
+                <tr>
+                    <td><span class="badge fulfilled">fulfilled</span></td>
+                    <td>Thành công — có kết quả</td>
+                    <td>Gọi <code>resolve(value)</code></td>
+                </tr>
+                <tr>
+                    <td><span class="badge rejected">rejected</span></td>
+                    <td>Thất bại — có lỗi</td>
+                    <td>Gọi <code>reject(error)</code></td>
+                </tr>
+            </table>
+            <div class="highlight warning">
+                ⚠️ Promise chỉ chuyển trạng thái <b>MỘT LẦN DUY NHẤT</b>. Sau khi resolve/reject, không thể đổi lại.
+            </div>
+        </div>
+
+        <!-- ========== 3. CÚ PHÁP ========== -->
+        <div class="card">
+            <h2>3. Cú pháp tạo Promise</h2>
+            <pre><code><span class="kw">const</span> <span class="var">p</span> = <span class="kw">new</span> <span class="fn">Promise</span>((<span class="var">resolve</span>, <span class="var">reject</span>) => {
+    <span class="cmt">// Executor: chạy ĐỒNG BỘ ngay khi new Promise được gọi</span>
+    <span class="kw">if</span> (<span class="cmt">/* thành công */</span>) {
+        <span class="fn">resolve</span>(<span class="str">"Kết quả"</span>);   <span class="cmt">// → fulfilled</span>
+    } <span class="kw">else</span> {
+        <span class="fn">reject</span>(<span class="kw">new</span> <span class="fn">Error</span>(<span class="str">"Lỗi"</span>));  <span class="cmt">// → rejected</span>
+    }
+});</code></pre>
+
+            <div class="highlight">
+                💡 <b>Nhớ kỹ:</b> Phần <code>(resolve, reject) =&gt; {...}</code> gọi là <b>executor</b> — nó chạy <b>ĐỒNG BỘ NGAY LẬP TỨC</b>, không phải async!
+            </div>
+        </div>
+
+        <!-- ========== 4. CONSUMING ========== -->
+        <div class="card">
+            <h2>4. Cách "tiêu thụ" Promise</h2>
+            <h3>a) Dùng .then() / .catch() / .finally()</h3>
+            <pre><code><span class="var">p</span>
+    .<span class="fn">then</span>(<span class="var">result</span> => {
+        <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"Thành công:"</span>, <span class="var">result</span>);
+    })
+    .<span class="fn">catch</span>(<span class="var">error</span> => {
+        <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"Thất bại:"</span>, <span class="var">error</span>);
+    })
+    .<span class="fn">finally</span>(() => {
+        <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"Luôn chạy, dù thành công hay thất bại"</span>);
+    });</code></pre>
+
+            <h3>b) Dùng async / await (cú pháp đẹp hơn)</h3>
+            <pre><code><span class="kw">async function</span> <span class="fn">run</span>() {
+    <span class="kw">try</span> {
+        <span class="kw">const</span> <span class="var">result</span> = <span class="kw">await</span> <span class="var">p</span>;
+        <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"Thành công:"</span>, <span class="var">result</span>);
+    } <span class="kw">catch</span> (<span class="var">error</span>) {
+        <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"Thất bại:"</span>, <span class="var">error</span>);
+    }
+}</code></pre>
+        </div>
+
+        <!-- ========== 5. SO SÁNH ========== -->
+        <div class="card">
+            <h2>5. Sync vs Async trong Promise</h2>
+            <table>
+                <tr>
+                    <th>Phần</th>
+                    <th>Chạy khi nào?</th>
+                </tr>
+                <tr>
+                    <td>Executor <code>(resolve, reject) =&gt; {...}</code></td>
+                    <td><b style="color:#fc8181;">SYNC</b> — ngay khi <code>new Promise</code></td>
+                </tr>
+                <tr>
+                    <td><code>.then()</code> / <code>.catch()</code></td>
+                    <td><b style="color:#68d391;">ASYNC</b> — sau khi promise resolve, đẩy vào microtask queue</td>
+                </tr>
+                <tr>
+                    <td><code>.finally()</code></td>
+                    <td><b style="color:#68d391;">ASYNC</b> — sau khi then/catch chạy xong</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- ========== 6. DEMO TRỰC QUAN ========== -->
+        <div class="card">
+            <h2>6. Demo trực quan</h2>
+            <p>Mở <b>Console (F12)</b> để xem output chi tiết. Bấm nút để chạy từng demo:</p>
+
+            <div class="btn-row">
+                <button id="btnDemo1" class="blue">▶ Demo 1: Promise cơ bản</button>
+                <button id="btnDemo2" class="green">▶ Demo 2: resolve vs reject</button>
+                <button id="btnDemo3" class="red">▶ Demo 3: Microtask vs Macrotask</button>
+            </div>
+
+            <div id="output" class="demo-output">→ Output sẽ hiện ở đây...</div>
+        </div>
+
+        <!-- ========== 7. TỔNG KẾT ========== -->
+        <div class="card">
+            <h2>7. Tổng kết cần nhớ</h2>
+            <ul>
+                <li>Promise có <b>3 trạng thái</b>: pending → fulfilled / rejected.</li>
+                <li>Chuyển trạng thái chỉ <b>1 lần duy nhất</b>, không đổi ngược.</li>
+                <li><b>Executor chạy SYNC</b>, chỉ có <code>.then()</code> chạy async.</li>
+                <li><code>.then()</code> nhận kết quả thành công, <code>.catch()</code> nhận lỗi, <code>.finally()</code> luôn chạy.</li>
+                <li>Microtask (Promise) ưu tiên hơn Macrotask (setTimeout).</li>
+                <li><code>async/await</code> chỉ là cú pháp "đường" cho Promise, bản chất vẫn là Promise.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="promise.js"></script>
+</body>
+</html>
